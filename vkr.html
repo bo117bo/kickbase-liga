@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -155,7 +156,8 @@
 <script>
 // ============================================
 // HIER die Web-App-URL aus dem Apps Script eintragen (siehe vkr-apps-script.gs)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSgL1g8rhoznhsUGVWdTkJZ1wWfMtlISfm9za6t4ZR5TZtHZvnVTTIQ9rFyYY...";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSgL1g8rhoznhsUGVWdTkJZ1wWfMtlISfm9za6t4ZR5TZtHZvnVTTIQ9rFyYY...
+";
 // ============================================
 
 const whoSelect = document.getElementById('who-select');
@@ -170,6 +172,68 @@ const setupNotice = document.getElementById('setup-notice');
 
 let currentState = null;
 let pendingForceSubmit = null; // speichert einen Namen, der nach Ähnlichkeits-Warnung bestätigt wurde
+
+// ===== JSONP-Hilfsfunktion (umgeht das CORS-Problem beim Lesen) =====
+let jsonpCounter = 0;
+function jsonpFetch(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'vkrCallback_' + (jsonpCounter++);
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Zeitüberschreitung beim Laden'));
+    }, 8000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('Skript konnte nicht geladen werden'));
+    };
+    const sep = url.includes('?') ? '&' : '?';
+    script.src = url + sep + 'callback=' + callbackName + '&_=' + Date.now();
+    document.body.appendChild(script);
+  });
+}
+
+// ===== Lokale Ähnlichkeitsprüfung (Spiegel der Server-Logik) =====
+function normalizeName(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]/g, '');
+}
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m + 1}, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j-1], dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+function similarity(a, b) {
+  const na = normalizeName(a), nb = normalizeName(b);
+  if (na === nb) return 1;
+  const dist = levenshtein(na, nb);
+  const maxLen = Math.max(na.length, nb.length);
+  return maxLen === 0 ? 0 : 1 - dist / maxLen;
+}
 
 function showMsg(text, type) {
   msgEl.textContent = text;
@@ -234,12 +298,13 @@ function renderState(state) {
 
 async function fetchState() {
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    const state = await res.json();
+    const state = await jsonpFetch(APPS_SCRIPT_URL);
     renderManagerSelect(state.managerOrder);
     renderState(state);
+    return state;
   } catch (e) {
     orderListEl.innerHTML = '<div class="loading">Konnte den Stand nicht laden. Prüfe die Verbindung zum Google Sheet.</div>';
+    return null;
   }
 }
 
@@ -259,31 +324,64 @@ draftForm.addEventListener('submit', async (e) => {
     showMsg('Bitte deinen persönlichen Code eingeben.', 'error');
     return;
   }
+  if (!currentState) {
+    showMsg('Stand noch nicht geladen, bitte kurz warten und erneut versuchen.', 'error');
+    return;
+  }
 
+  // ===== Lokale Vorprüfungen (spiegeln die Server-Logik, da wir die
+  // POST-Antwort wegen CORS nicht direkt auslesen können) =====
+  if (currentState.isComplete) {
+    showMsg('Alle VKR-Plätze sind bereits vergeben.', 'error');
+    return;
+  }
+  if (manager !== currentState.currentManager) {
+    showMsg(`Nicht dein Zug. Aktuell dran: ${currentState.currentManager}`, 'error');
+    return;
+  }
+  const exactMatch = currentState.picks.find(p => normalizeName(p.player) === normalizeName(player));
+  if (exactMatch) {
+    showMsg(`"${player}" wurde bereits von ${exactMatch.manager} gezogen.`, 'error');
+    return;
+  }
+  const force = pendingForceSubmit === player;
+  if (!force) {
+    const similar = currentState.picks.find(p => similarity(p.player, player) >= 0.75);
+    if (similar) {
+      showMsg(`Ähnlich zu bereits gezogenem Spieler "${similar.player}" (von ${similar.manager}). Meintest du diesen Spieler? Falls nein, klicke erneut auf "Ziehen" um trotzdem fortzufahren.`, 'warning');
+      pendingForceSubmit = player;
+      return;
+    }
+  }
+
+  // ===== Absenden. Wegen CORS können wir die Antwort von Apps Script
+  // nicht direkt lesen (mode: 'no-cors'), daher prüfen wir den Erfolg
+  // hinterher über einen erneuten Abruf des Standes. =====
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Prüfe …';
+  submitBtn.textContent = 'Sende …';
 
   try {
-    const force = pendingForceSubmit === player;
-    const res = await fetch(APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ manager, player, pin, force })
+      mode: 'no-cors',
+      body: JSON.stringify({ manager, pin, player, force })
     });
-    const result = await res.json();
 
-    if (result.success) {
+    // kurz warten, damit Apps Script die Zeile schreiben kann
+    await new Promise(r => setTimeout(r, 1500));
+    const newState = await fetchState();
+
+    const nowHasPick = newState && newState.picks.some(
+      p => p.manager === manager && normalizeName(p.player) === normalizeName(player)
+    );
+
+    if (nowHasPick) {
       showMsg(`"${player}" wurde erfolgreich für ${manager} eingetragen.`, 'success');
       playerInput.value = '';
       pinInput.value = '';
       pendingForceSubmit = null;
-      renderState(result.state);
-    } else if (result.warning) {
-      showMsg(result.error + ' Klicke erneut auf "Ziehen" um trotzdem fortzufahren, oder ändere den Namen.', 'warning');
-      pendingForceSubmit = player;
     } else {
-      showMsg(result.error, 'error');
-      pendingForceSubmit = null;
-      await fetchState(); // Stand neu laden, falls sich z.B. der Zug geändert hat
+      showMsg('Der Eintrag hat nicht geklappt. Bitte prüfe deinen Code — oder jemand anderes war schneller.', 'error');
     }
   } catch (e) {
     showMsg('Verbindungsfehler. Bitte nochmal versuchen.', 'error');
