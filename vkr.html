@@ -78,7 +78,7 @@
   }
   .draft-form button:disabled { background: var(--border); color: var(--gray); cursor: not-allowed; }
 
-  .msg { border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-bottom: 1.5rem; display: none; white-space: pre-wrap; line-height: 1.6; }
+  .msg { border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-bottom: 1.5rem; display: none; }
   .msg.error { background: var(--red-bg); color: var(--red); display: block; }
   .msg.warning { background: var(--amber-bg); color: var(--amber); display: block; }
   .msg.success { background: var(--green-bg); color: var(--green-text); display: block; }
@@ -323,36 +323,6 @@ whoSelect.addEventListener('change', () => {
   if (currentState) renderState(currentState);
 });
 
-// ===== KI-Kommentar nach erfolgreichem VKR-Eintrag =====
-async function getVKRRoast(manager, player, allPicks) {
-  const otherPicks = allPicks
-    .filter(p => p.manager !== manager)
-    .map(p => `${p.manager} hat ${p.player} gezogen`)
-    .join(', ');
-
-  const prompt = `Du bist der sarkastische Kommentator einer privaten Kickbase-Fußballmanager-Liga unter Freunden. 
-${manager} hat gerade "${player}" als VKR-Spieler gezogen.
-${otherPicks ? `Bisher wurden gezogen: ${otherPicks}.` : 'Er ist der erste der zieht.'}
-
-Schreib einen kurzen, witzigen, leicht sarkastischen Kommentar auf Deutsch über diese Wahl (1-2 Sätze max). 
-Bezieh dich auf den Spieler und seine Stärken/Schwächen im echten Fußball.
-Sei dabei lustig aber nicht gemein. Manchmal lobend, manchmal zweifelnd, manchmal überrascht.
-Nur den Kommentar, kein "Kommentar:" davor.`;
-
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 150,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  const data = await response.json();
-  return data.content?.[0]?.text || '...kein Kommentar.';
-}
-
 draftForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearMsg();
@@ -419,16 +389,7 @@ draftForm.addEventListener('submit', async (e) => {
       playerInput.value = '';
       pinInput.value = '';
       pendingForceSubmit = null;
-      showMsg(`✅ "${player}" wurde erfolgreich für ${manager} eingetragen. Einen Moment…`, 'success');
-
-      // KI-Kommentar über den gezogenen Spieler
-      try {
-        const roasts = await getVKRRoast(manager, player, newState.picks);
-        showMsg(`✅ "${player}" ist gesetzt für ${manager}.\n\n💬 ${roasts}`, 'success');
-      } catch (err) {
-        // Falls API-Call fehlschlägt, einfach ohne Kommentar
-        showMsg(`✅ "${player}" wurde erfolgreich für ${manager} eingetragen.`, 'success');
-      }
+      showMsg(`✅ "${player}" wurde erfolgreich für ${manager} eingetragen.`, 'success');
     } else {
       showMsg('Der Eintrag hat nicht geklappt. Bitte prüfe deinen Code — oder jemand anderes war schneller.', 'error');
     }
