@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kickbase Liga · Regelwerk 2026/27</title>
+<style>
+  :root {
+    --dark: #1b1b1b;
+    --green: #2d6a4f;
+    --green-bg: #f0fdf4;
+    --green-text: #1b4332;
+    --gray: #6b7280;
+    --gray-bg: #f3f4f6;
+    --border: #e5e7eb;
+    --white: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--dark);
+    background: var(--white);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 4rem; }
+
+  /* Search bar */
+  .search-bar {
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    z-index: 20;
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+  }
+  .search-bar input:focus { border-color: var(--green); }
+  #search-results-count {
+    font-size: 13px;
+    color: var(--gray);
+    margin: 8px 2px 0;
+  }
+  mark {
+    background: #bbf7d0;
+    color: var(--green-text);
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+  .no-match { display: none; }
+
+  /* Hero */
+  .hero { background: var(--dark); border-radius: 16px; overflow: hidden; margin: 2rem 0 2.5rem; }
+  .hero-img { height: 180px; background: #2a2a2a; display: flex; align-items: center; justify-content: center; color: #555; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .hero-body { padding: 2rem 1.75rem 2.25rem; }
+  .hero-kicker { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #8fd9b6; margin: 0 0 10px; font-weight: 600; }
+  .hero h1 { font-size: 38px; line-height: 1.1; font-weight: 600; margin: 0; color: var(--white); letter-spacing: -0.5px; }
+  .hero h1 span { color: #52b788; }
+
+  /* Stat grid */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 3rem; }
+  .stat { text-align: center; padding: 1rem 4px; background: var(--gray-bg); border-radius: 10px; }
+  .stat .num { font-size: 26px; font-weight: 700; margin: 0; line-height: 1; }
+  .stat .lbl { font-size: 10px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin: 6px 0 0; }
+
+  .block { margin-bottom: 3rem; scroll-margin-top: 80px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--green); margin: 0 0 8px; }
+  .big-h { font-size: 28px; font-weight: 700; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.3px; }
+  .body-sm { font-size: 14px; color: #4b5563; line-height: 1.65; margin: 0; }
+  .body-md { font-size: 16px; line-height: 1.7; margin: 0; }
+  .byline { font-size: 13px; color: var(--gray); margin: 0 0 10px; font-weight: 600; }
+  .side-link { font-size: 13px; color: var(--gray); margin-top: 8px; }
+  .side-link a { color: var(--green); }
+
+  .checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .checklist li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; }
+  .checklist li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+  .timeline-strip { display: flex; flex-direction: column; gap: 0; }
+  .tl-row { display: flex; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); }
+  .tl-row:first-child { border-top: none; }
+  .tl-num { font-size: 22px; font-weight: 700; min-width: 80px; color: var(--green); }
+  .tl-txt p { margin: 0; }
+  .tl-txt .t1 { font-size: 15px; font-weight: 600; }
+  .tl-txt .t2 { font-size: 13px; color: var(--gray); }
+
+  .prem-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .prem { background: var(--gray-bg); border-radius: 10px; padding: 14px 16px; }
+  .prem .p1 { font-size: 12px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+  .prem .p2 { font-size: 17px; font-weight: 700; margin: 4px 0 0; }
+  .prem-note { font-size: 12px; color: var(--gray); margin-top: 10px; font-style: italic; }
+
+  .highlight-box { background: var(--green-bg); border-radius: 10px; padding: 1rem 1.25rem; margin-top: 1rem; border-left: 4px solid var(--green); }
+  .highlight-box .eyebrow { margin-bottom: 4px; }
+  .highlight-box p { color: var(--green-text); font-size: 14px; margin: 0; line-height: 1.6; }
+
+  .faq-item { background: var(--gray-bg); border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; }
+  .faq-item .q { font-size: 15px; font-weight: 700; color: var(--green); margin: 0 0 6px; }
+  .faq-item .a { font-size: 14px; color: #4b5563; margin: 0; line-height: 1.55; }
+
+  footer { text-align: center; padding: 2rem 0 1rem; color: var(--gray); font-size: 14px; font-style: italic; }
+  footer .sig { font-style: normal; font-weight: 700; color: var(--dark); font-size: 13px; letter-spacing: 1px; margin-top: 12px; }
+
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .prem-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Regelwerk durchsuchen … z. B. VKR, Einsatz, Kader" autocomplete="off">
+    <div id="search-results-count"></div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-img">Kickbase Liga</div>
+    <div class="hero-body">
+      <p class="hero-kicker">Kickbase Liga · Saison 2026/27</p>
+      <h1>Eine Liga, die sich <span>jedes Jahr</span> neu erfindet</h1>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat"><p class="num">14</p><p class="lbl">Manager</p></div>
+    <div class="stat"><p class="num">100M</p><p class="lbl">Startkapital</p></div>
+    <div class="stat"><p class="num">50€</p><p class="lbl">Einsatz</p></div>
+    <div class="stat"><p class="num">17K</p><p class="lbl">Mindestpunkte</p></div>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Fahrplan</p>
+    <h2 class="big-h">Der Weg zum Anpfiff</h2>
+    <div class="timeline-strip">
+      <div class="tl-row"><div class="tl-num">24.07</div><div class="tl-txt"><p class="t1">Sammel-Nachricht an die Liga</p><p class="t2">Personalstand, neue Manager, Ablauf</p></div></div>
+      <div class="tl-row"><div class="tl-num">27.07</div><div class="tl-txt"><p class="t1">VKR-Benennung, Deadline</p><p class="t2">Jeder Manager benennt seinen Spieler</p></div></div>
+      <div class="tl-row"><div class="tl-num">28.07</div><div class="tl-txt"><p class="t1">Transfermarkt öffnet</p><p class="t2">Direkt im Anschluss, keine Wartezeit</p></div></div>
+      <div class="tl-row"><div class="tl-num">bis 28.08</div><div class="tl-txt"><p class="t1">Zahlung Einsatz (50€)</p><p class="t2">An Patrick, genauer Termin wird von ihm festgelegt</p></div></div>
+      <div class="tl-row"><div class="tl-num">28.08</div><div class="tl-txt"><p class="t1">Bundesliga-Saisonstart</p><p class="t2">Eröffnungsspiel Bayern gegen Stuttgart</p></div></div>
+    </div>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Leitung</p>
+    <h2 class="big-h">Wer die Fäden zieht</h2>
+    <p class="byline">Leo · Kempe · Beach</p>
+    <p class="body-sm">Die Leitung besteht aus drei Parteien und entscheidet über Aufnahme neuer Manager, Regeländerungen und strittige Fälle. Schatzmeister ist Patrick, zuständig für Einsatz, Prämien und volle Transparenz der Kasse.</p>
+    <p class="side-link">Side-Bet-Dokument: <a href="https://docs.google.com/spreadsheets/d/1ZQQBVDrKvADtsydtV40YWTvy1WlIjcsE5nRFJJvDLE4/edit" target="_blank" rel="noopener">Link zum Spreadsheet</a></p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Abstimmung</p>
+    <h2 class="big-h">Wie Regeln entstehen</h2>
+    <ul class="checklist">
+      <li>⅔-Mehrheit entscheidet, bei 12 Managern braucht es 9 Zustimmungen</li>
+      <li>Neue Vorschläge müssen sinnvoll begründet sein</li>
+      <li>Die Leitung erstellt eine anonyme Umfrage, abgeschlossen innerhalb einer Woche</li>
+    </ul>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Vorkaufsrecht</p>
+    <h2 class="big-h">Das VKR-System</h2>
+    <p class="body-sm">Jeder Manager belegt einen Spieler mit VKR, die Reihenfolge folgt der VKR-Tabelle. Erscheint der Spieler auf dem Transfermarkt, muss das in der Gruppe kommuniziert werden. Verbindlich zu ziehen, auch bei Nebelgranaten: wer eine Nebelkerze zieht, zahlt beim Wintermeeting eine Runde Bier, der Spieler wird für alle frei. Beim zweiten Erscheinen auf dem Markt ist der Spieler ohnehin für alle frei. Wer seinen Draft verpasst, verliert sein VKR. Neulinge dürfen als Erstes setzen.</p>
+    <div class="highlight-box">
+      <p class="eyebrow">Neu ab Saison 26/27</p>
+      <p>VKR-Spieler werden am Stichtag benannt, der Marktwert wird zu diesem Zeitpunkt festgehalten. Der Transfermarkt öffnet direkt im Anschluss, keine Wartezeit mehr. Steigt der Marktwert bis zum Kauf, gleicht der Admin die Differenz per Gutschrift aus.</p>
+    </div>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Startkapital</p>
+    <h2 class="big-h">100 Millionen für alle</h2>
+    <p class="body-md">Das Startkapital wird direkt vom Admin (Kempe) über die Kickbase-Admin-Tools vergeben und angepasst. Der bisherige Ghost-Player-Prozess entfällt damit vollständig.</p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Kasse</p>
+    <h2 class="big-h">Schatzmeister &amp; Prämien</h2>
+    <p class="body-sm">Einsatz: 50 Euro pro Person. Patrick sorgt für volle Transparenz der Gelder, erstellt die Aufstellung bei Saisonübergang und übernimmt Auszahlung sowie Einzug.</p>
+    <div class="prem-grid" style="margin-top: 1rem;">
+      <div class="prem"><p class="p1">Platz 1–3</p><p class="p2">250€ · 200€ · 150€</p></div>
+      <div class="prem"><p class="p1">Platz 4–7</p><p class="p2">100€ · 75€ · 50€ · 25€</p></div>
+      <div class="prem"><p class="p1">Platz 8–9</p><p class="p2">Keine Auszahlung</p></div>
+      <div class="prem"><p class="p1">Platz 10–14</p><p class="p2">-10€ bis -50€</p></div>
+    </div>
+    <p class="prem-note">Summe Einsätze: 14 × 50€ = 700€ · Summe Strafzahlungen: 150€. Tabelle bleibt vorerst unverändert, Patrick kann diese anpassen, sobald sie an ihn übergeben ist.</p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Kader &amp; Leihen</p>
+    <h2 class="big-h">Grenzen im Team</h2>
+    <p class="body-md">Der Kader ist auf 14 Spieler limitiert, am Start jedes Spieltags darf diese Zahl nicht überschritten werden. Leihgeschäfte sind erlaubt, solange sie keine unlautere Wettbewerbsverzerrung schaffen. Sieht eine der drei Leitungsparteien einen Deal kritisch, kann sie eine WhatsApp-Abstimmung einleiten. Stimmen zwei Drittel dagegen, wird der Deal annulliert, die beteiligten Manager stimmen dabei nicht mit ab.</p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Mindestleistung</p>
+    <h2 class="big-h">Die 17.000-Punkte-Marke</h2>
+    <p class="body-md">Am Saisonende müssen mindestens 17.000 Punkte erreicht werden. Wer darunter liegt, riskiert eine Abstimmung der Liga über seine weitere Eignung.</p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Neue Gesichter</p>
+    <h2 class="big-h">Aufnahme neuer Manager</h2>
+    <p class="body-md">Die Aufnahme entscheidet allein die Leitung, eine Abstimmung der gesamten Liga ist nicht erforderlich. Ein Vorstellungsvideo ist optional, keine Voraussetzung.</p>
+  </div>
+
+  <div class="block searchable">
+    <p class="eyebrow">Sonstiges</p>
+    <h2 class="big-h">Was noch ansteht</h2>
+    <ul class="checklist">
+      <li>Wintermeeting findet wieder im Dezember statt</li>
+      <li>Captain-Feature wird beim Wintermeeting besprochen und final abgestimmt</li>
+    </ul>
+  </div>
+
+  <div class="block searchable" style="border-top: 2px solid var(--dark); padding-top: 2.5rem;">
+    <p class="eyebrow">Für neue Manager</p>
+    <h2 class="big-h">Häufige Fragen, echte Fails</h2>
+    <p class="body-sm" style="margin-bottom: 1.25rem;">Aus über 10 Jahren Liga-Geschichte: die Fragen und Fehler, die immer wieder kommen. Spart euch die Peinlichkeit, lest das hier einmal durch.</p>
+
+    <div class="faq-item"><p class="q">Was ist ein VKR?</p><p class="a">Vorkaufsrecht. Jeder Manager darf vor der Saison einen Spieler reservieren, den sonst niemand kaufen darf. Die Reihenfolge, wer zuerst wählt, ergibt sich aus der VKR-Tabelle. Neulinge dürfen als Erstes setzen.</p></div>
+
+    <div class="faq-item"><p class="q">Was passiert, wenn ich mein VKR nicht kaufe?</p><p class="a">Das nennen wir eine Nebelkerze und es ist ein Regelverstoß. Der Spieler wird für alle freigegeben und du zahlst beim Wintermeeting eine Runde Bier.</p></div>
+
+    <div class="faq-item"><p class="q">Was, wenn jemand meinen VKR-Spieler kauft?</p><p class="a">Die Leitung wickelt das rück ab: der Spieler geht zum Marktwert an den rechtmäßigen VKR-Halter, der Käufer erhält eine Strafe. Der Admin kann Transfers auch direkt widerrufen.</p></div>
+
+    <div class="faq-item"><p class="q">Wie läuft der Transfermarkt-Start ab?</p><p class="a">Erst werden alle VKRs der Reihe nach benannt (Deadline: 27.07), danach öffnet der Transfermarkt am 28.07 für alle.</p></div>
+
+    <div class="faq-item"><p class="q">Was ist mit den 100 Mio Startkapital?</p><p class="a">Jeder Manager startet mit 100 Mio. Budget, vergeben direkt vom Admin über die Kickbase-Admin-Tools. Der frühere Ghost-Player-Prozess entfällt.</p></div>
+
+    <div class="faq-item"><p class="q">Wie viele Spieler darf ich haben?</p><p class="a">Maximal 14 Spieler im Kader. Am Start jedes Spieltags muss der Kader auf oder unter 14 sein.</p></div>
+
+    <div class="faq-item"><p class="q">Was kosten mich Einsatz und Prämien?</p><p class="a">50 Euro Einsatz pro Saison, einzuzahlen an Patrick. Je nach Platzierung bekommst du Geld zurück oder zahlst drauf.</p></div>
+
+    <div class="faq-item"><p class="q">Was sind Leihgeschäfte und darf ich das?</p><p class="a">Leihgeschäfte zwischen Managern sind erlaubt, solange sie fair sind. Bei Verdacht auf Wettbewerbsverzerrung gibt es eine Abstimmung.</p></div>
+
+    <div class="faq-item"><p class="q">Muss ich aktiv spielen?</p><p class="a">Ja. Am Saisonende müssen mindestens 17.000 Punkte erreicht werden, sonst kann über deine weitere Teilnahme abgestimmt werden.</p></div>
+  </div>
+
+  <footer>
+    <p>Der Spaß steht im Vordergrund.<br>Gute Saison allen Managern!</p>
+    <p class="sig">— DIE LEITUNG —</p>
+  </footer>
+
+</div>
+
+<script>
+(function() {
+  const input = document.getElementById('search-input');
+  const countEl = document.getElementById('search-results-count');
+  const blocks = Array.from(document.querySelectorAll('.searchable'));
+  const originalHTML = blocks.map(b => b.innerHTML);
+
+  function clearHighlights(i) {
+    blocks[i].innerHTML = originalHTML[i];
+  }
+
+  function highlightText(root, term) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    const regex = new RegExp('(' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    nodes.forEach(node => {
+      if (!regex.test(node.nodeValue)) return;
+      regex.lastIndex = 0;
+      const span = document.createElement('span');
+      span.innerHTML = node.nodeValue.replace(regex, '<mark>$1</mark>');
+      node.parentNode.replaceChild(span, node);
+    });
+  }
+
+  function runSearch() {
+    const term = input.value.trim();
+    let matchCount = 0;
+
+    blocks.forEach((block, i) => {
+      clearHighlights(i);
+      if (!term) {
+        block.classList.remove('no-match');
+        return;
+      }
+      const text = block.textContent.toLowerCase();
+      if (text.includes(term.toLowerCase())) {
+        block.classList.remove('no-match');
+        highlightText(block, term);
+        matchCount++;
+      } else {
+        block.classList.add('no-match');
+      }
+    });
+
+    if (!term) {
+      countEl.textContent = '';
+    } else {
+      countEl.textContent = matchCount === 0
+        ? 'Keine Treffer für „' + term + '"'
+        : matchCount + ' Abschnitt' + (matchCount === 1 ? '' : 'e') + ' gefunden';
+    }
+  }
+
+  input.addEventListener('input', runSearch);
+})();
+</script>
+
+</body>
+</html>

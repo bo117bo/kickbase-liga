@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VKR-Draft · Kickbase Liga 2026/27</title>
+<style>
+  :root {
+    --dark: #1b1b1b;
+    --green: #2d6a4f;
+    --green-bg: #f0fdf4;
+    --green-text: #1b4332;
+    --gray: #6b7280;
+    --gray-bg: #f3f4f6;
+    --border: #e5e7eb;
+    --white: #ffffff;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --amber: #92400e;
+    --amber-bg: #fffbeb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--dark);
+    background: var(--white);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 2rem 20px 4rem; }
+
+  .back-link { font-size: 13px; color: var(--gray); text-decoration: none; }
+  .back-link:hover { color: var(--green); }
+
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--green); margin: 24px 0 8px; }
+  h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px; letter-spacing: -0.3px; }
+  .sub { font-size: 14px; color: var(--gray); margin: 0 0 2rem; }
+
+  /* Whoami */
+  .whoami { background: var(--gray-bg); border-radius: 10px; padding: 14px 16px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .whoami label { font-size: 13px; font-weight: 600; color: var(--gray); }
+  .whoami select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; }
+
+  /* Current turn banner */
+  .turn-banner { border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .turn-banner.active { background: var(--green-bg); border: 1.5px solid var(--green); }
+  .turn-banner.waiting { background: var(--gray-bg); }
+  .turn-banner.done { background: var(--amber-bg); border: 1.5px solid #d97706; }
+  .turn-banner p { margin: 0; }
+  .turn-banner .who { font-size: 20px; font-weight: 700; color: var(--green-text); }
+  .turn-banner.waiting .who { color: var(--dark); }
+  .turn-banner .hint { font-size: 13px; color: var(--gray); margin-top: 4px; }
+
+  /* Input form */
+  .draft-form { display: flex; gap: 8px; margin-bottom: 0.5rem; }
+  .draft-form input {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+  }
+  .draft-form input:focus { border-color: var(--green); }
+  .draft-form input:disabled { background: var(--gray-bg); color: var(--gray); }
+  .draft-form button {
+    padding: 12px 20px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .draft-form button:disabled { background: var(--border); color: var(--gray); cursor: not-allowed; }
+
+  .msg { border-radius: 8px; padding: 10px 14px; font-size: 14px; margin-bottom: 1.5rem; display: none; }
+  .msg.error { background: var(--red-bg); color: var(--red); display: block; }
+  .msg.warning { background: var(--amber-bg); color: var(--amber); display: block; }
+  .msg.success { background: var(--green-bg); color: var(--green-text); display: block; }
+
+  /* Order list */
+  .order-list { display: flex; flex-direction: column; gap: 0; margin-top: 1rem; }
+  .order-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+  }
+  .order-row:first-child { border-top: none; }
+  .order-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    background: var(--gray-bg); color: var(--gray);
+    flex-shrink: 0;
+  }
+  .order-row.picked .order-num { background: var(--green); color: white; }
+  .order-row.current .order-num { background: var(--green-text); color: white; }
+  .order-manager { font-size: 15px; font-weight: 600; min-width: 90px; }
+  .order-player { font-size: 14px; color: var(--gray); flex: 1; }
+  .order-row.picked .order-player { color: var(--green-text); font-weight: 600; }
+  .order-row.current .order-manager { color: var(--green-text); }
+  .badge-current { font-size: 11px; background: var(--green); color: white; padding: 2px 8px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .loading { text-align: center; color: var(--gray); font-size: 14px; padding: 2rem 0; }
+  .setup-notice { background: var(--amber-bg); border: 1px solid #d97706; color: var(--amber); border-radius: 10px; padding: 1rem 1.25rem; font-size: 14px; margin-bottom: 1.5rem; }
+  .setup-notice code { background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="index.html" class="back-link">← Zurück zum Regelwerk</a>
+
+  <p class="eyebrow">VKR-Draft</p>
+  <h1>Wer zieht welchen Spieler</h1>
+  <p class="sub">Live-Reihenfolge für die Saison 2026/27. Nur der aktuell Berechtigte kann einen Namen eintragen, gezogene Spieler sind für alle anderen gesperrt.</p>
+
+  <div id="setup-notice" class="setup-notice" style="display:none;">
+    ⚠️ Diese Seite ist noch nicht mit dem Google-Sheet-Backend verbunden. Trage die Apps-Script-URL in der Datei oben bei <code>APPS_SCRIPT_URL</code> ein (siehe Anleitung im vkr-apps-script.gs).
+  </div>
+
+  <div class="whoami">
+    <label for="who-select">Ich bin:</label>
+    <select id="who-select"></select>
+    <label for="pin-input" style="margin-left: 6px;">Code:</label>
+    <input type="password" id="pin-input" placeholder="6-stelliger Code" inputmode="numeric" maxlength="6" style="width: 130px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 14px; font-family: inherit;">
+  </div>
+
+  <div id="turn-banner" class="turn-banner waiting">
+    <p class="who">Lädt …</p>
+  </div>
+
+  <form id="draft-form" class="draft-form">
+    <input type="text" id="player-input" placeholder="Spielername eintragen …" autocomplete="off" disabled>
+    <button type="submit" id="submit-btn" disabled>Ziehen</button>
+  </form>
+
+  <div id="msg" class="msg"></div>
+
+  <p class="eyebrow" style="margin-top: 2rem;">Reihenfolge &amp; Stand</p>
+  <div id="order-list" class="order-list">
+    <div class="loading">Lade aktuellen Stand …</div>
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// HIER die Web-App-URL aus dem Apps Script eintragen (siehe vkr-apps-script.gs)
+const APPS_SCRIPT_URL = "HIER_DEINE_APPS_SCRIPT_URL_EINFUEGEN";
+// ============================================
+
+const whoSelect = document.getElementById('who-select');
+const pinInput = document.getElementById('pin-input');
+const turnBanner = document.getElementById('turn-banner');
+const draftForm = document.getElementById('draft-form');
+const playerInput = document.getElementById('player-input');
+const submitBtn = document.getElementById('submit-btn');
+const msgEl = document.getElementById('msg');
+const orderListEl = document.getElementById('order-list');
+const setupNotice = document.getElementById('setup-notice');
+
+let currentState = null;
+let pendingForceSubmit = null; // speichert einen Namen, der nach Ähnlichkeits-Warnung bestätigt wurde
+
+function showMsg(text, type) {
+  msgEl.textContent = text;
+  msgEl.className = 'msg ' + type;
+}
+function clearMsg() {
+  msgEl.textContent = '';
+  msgEl.className = 'msg';
+}
+
+function getMyName() {
+  return localStorage.getItem('vkr-my-name') || '';
+}
+function setMyName(name) {
+  localStorage.setItem('vkr-my-name', name);
+}
+
+function renderManagerSelect(order) {
+  whoSelect.innerHTML = '<option value="">– auswählen –</option>' +
+    order.map(m => `<option value="${m}">${m}</option>`).join('');
+  const saved = getMyName();
+  if (saved && order.includes(saved)) whoSelect.value = saved;
+}
+
+function renderState(state) {
+  currentState = state;
+
+  // Turn banner
+  if (state.isComplete) {
+    turnBanner.className = 'turn-banner done';
+    turnBanner.innerHTML = '<p class="who">Alle VKR-Plätze sind vergeben 🎉</p><p class="hint">Der Transfermarkt kann öffnen.</p>';
+  } else {
+    const me = getMyName();
+    const isMyTurn = me && me === state.currentManager;
+    turnBanner.className = 'turn-banner ' + (isMyTurn ? 'active' : 'waiting');
+    turnBanner.innerHTML = isMyTurn
+      ? `<p class="who">Du bist dran! 🔥</p><p class="hint">Trag deinen VKR-Spieler unten ein.</p>`
+      : `<p class="who">Aktuell dran: ${state.currentManager}</p><p class="hint">${me ? 'Bitte warten, bis du an der Reihe bist.' : 'Wähle oben aus, wer du bist.'}</p>`;
+  }
+
+  // Input enable/disable
+  const me = getMyName();
+  const canSubmit = !state.isComplete && me && me === state.currentManager;
+  playerInput.disabled = !canSubmit;
+  submitBtn.disabled = !canSubmit;
+
+  // Order list
+  orderListEl.innerHTML = state.managerOrder.map((manager, i) => {
+    const pick = state.picks[i];
+    const isCurrent = !state.isComplete && i === state.picks.length;
+    const cls = pick ? 'picked' : (isCurrent ? 'current' : '');
+    return `
+      <div class="order-row ${cls}">
+        <div class="order-num">${i + 1}</div>
+        <div class="order-manager">${manager}</div>
+        <div class="order-player">${pick ? pick.player : (isCurrent ? '— wählt gerade —' : '')}</div>
+        ${isCurrent ? '<span class="badge-current">Dran</span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function fetchState() {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    const state = await res.json();
+    renderManagerSelect(state.managerOrder);
+    renderState(state);
+  } catch (e) {
+    orderListEl.innerHTML = '<div class="loading">Konnte den Stand nicht laden. Prüfe die Verbindung zum Google Sheet.</div>';
+  }
+}
+
+whoSelect.addEventListener('change', () => {
+  setMyName(whoSelect.value);
+  if (currentState) renderState(currentState);
+});
+
+draftForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearMsg();
+  const player = playerInput.value.trim();
+  const manager = getMyName();
+  const pin = pinInput.value.trim();
+  if (!player || !manager) return;
+  if (!pin) {
+    showMsg('Bitte deinen persönlichen Code eingeben.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Prüfe …';
+
+  try {
+    const force = pendingForceSubmit === player;
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ manager, player, pin, force })
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      showMsg(`"${player}" wurde erfolgreich für ${manager} eingetragen.`, 'success');
+      playerInput.value = '';
+      pinInput.value = '';
+      pendingForceSubmit = null;
+      renderState(result.state);
+    } else if (result.warning) {
+      showMsg(result.error + ' Klicke erneut auf "Ziehen" um trotzdem fortzufahren, oder ändere den Namen.', 'warning');
+      pendingForceSubmit = player;
+    } else {
+      showMsg(result.error, 'error');
+      pendingForceSubmit = null;
+      await fetchState(); // Stand neu laden, falls sich z.B. der Zug geändert hat
+    }
+  } catch (e) {
+    showMsg('Verbindungsfehler. Bitte nochmal versuchen.', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Ziehen';
+  }
+});
+
+// Initial laden + alle 5 Sekunden aktualisieren (einfaches Polling, da GitHub Pages kein Echtzeit-Feld hat)
+if (APPS_SCRIPT_URL.indexOf('HIER_DEINE') !== -1) {
+  setupNotice.style.display = 'block';
+  orderListEl.innerHTML = '<div class="loading">Noch nicht verbunden — siehe Hinweis oben.</div>';
+} else {
+  fetchState();
+  setInterval(fetchState, 5000);
+}
+</script>
+
+</body>
+</html>
